@@ -12,88 +12,30 @@
   </div>
 </template>
 <script setup>
-import { ref, computed, watch } from "vue";
-
-const props = defineProps({
-  data: {
-    type: Object,
-    required: true,
+// useFetch with caching
+const {
+  data: movies,
+  pending,
+  error,
+} = await useFetch("https://api.themoviedb.org/3/movie/popular", {
+  query: {
+    api_key: "41e7cfcdca28d4e6ade4c5f72bcca09f",
+    language: "en-US",
+    page: 1,
   },
+  // Enables caching in SSR context
+  key: "popular-movies", // Unique cache key
+  server: true, // Runs only on server (SSR)
+  lazy: true, // Lazy fetch (on-demand instead of on server render)
+  default: () => ({ results: [] }), // default structure to avoid null errors
 });
 
-const languageMap = {
-  en: "English",
-  es: "Spanish",
-  fr: "French",
-  de: "German",
-  it: "Italian",
-  ja: "Japanese",
-  ko: "Korean",
-  hi: "Hindi",
-  zh: "Chinese",
-  pt: "Portuguese",
-  ru: "Russian",
-  ar: "Arabic",
-  tr: "Turkish",
-  pl: "Polish",
-  nl: "Dutch",
-  sv: "Swedish",
-  fi: "Finnish",
-  da: "Danish",
-  no: "Norwegian",
-  he: "Hebrew",
-  el: "Greek",
-  ro: "Romanian",
-  th: "Thai",
-  id: "Indonesian",
-  vi: "Vietnamese",
-  uk: "Ukrainian",
-  hu: "Hungarian",
-  cs: "Czech",
-  sk: "Slovak",
-  fa: "Persian",
-  ta: "Tamil",
-  te: "Telugu",
-  ml: "Malayalam",
-  bn: "Bengali",
-  ur: "Urdu",
-};
-
-const movieRating = computed(() => {
-  return parseFloat(props.data.vote_average.toFixed(1));
-});
-
-const releaseYear = computed(() => {
-  return props.data.release_date.split("-")[0];
-});
-
-const language = computed(() => {
-  const code = props.data.original_language;
-  return languageMap[code] || code?.toUpperCase() || "Unknown";
-});
-
-// --- FAVORITES FIX START ---
-const favoriteMovies = ref([]);
-
-onMounted(() => {
-  const stored = JSON.parse(localStorage.getItem("favoriteMovies") || "[]");
-  favoriteMovies.value = stored;
-});
-
-const isFavorite = computed(() => {
-  return favoriteMovies.value.some((movie) => movie.id === props.data.id);
-});
-
-function handleFavorite(movie) {
-  const index = favoriteMovies.value.findIndex((item) => item.id === movie.id);
-
-  if (index !== -1) {
-    favoriteMovies.value.splice(index, 1);
-  } else {
-    favoriteMovies.value.push(movie);
+const topMovies = computed(() => {
+  if (movies.value?.results) {
+    return [...movies.value.results]
+      .sort((a, b) => b.vote_average - a.vote_average)
+      .slice(0, 8);
   }
-
-  localStorage.setItem("favoriteMovies", JSON.stringify(favoriteMovies.value));
-}
-// --- FAVORITES FIX END ---
+  return [];
+});
 </script>

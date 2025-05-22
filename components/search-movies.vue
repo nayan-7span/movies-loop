@@ -54,6 +54,16 @@
     >
       <MovieCard v-for="movie in movies" :data="movie" :key="movie.id" />
     </div>
+    <div
+      v-else
+      class="h-72 w-full flex flex-col items-center text-gray-600 font-bold gap-2 text-3xl justify-center"
+    >
+      <Icon
+        name="hugeicons:video-off"
+        class="text-5xl text-danger-500 opacity-50"
+      />
+      No movies found
+    </div>
   </div>
 </template>
 
@@ -100,7 +110,6 @@ const fetchMovies = async () => {
 
     if (json.results) {
       movies.value = json.results;
-      console.log("the movies are", movies.value);
     } else {
       throw new Error(json.status_message || "Unknown error");
     }
